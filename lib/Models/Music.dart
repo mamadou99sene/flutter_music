@@ -2,15 +2,13 @@ class Music {
   late String title;
   late String preview;
   late String name_artist;
-  late String title_album;
-  late String type;
+  late String artist_picture;
 
   Music.fromJson(dynamic jsonData) {
     title = jsonData["title"];
     preview = jsonData["preview"];
     name_artist = jsonData["artist"]["name"];
-    title_album = jsonData["album"]["title"];
-    type = jsonData["type"];
+    artist_picture = jsonData["artist"]["picture_medium"];
   }
   String getPreview() {
     return preview;
