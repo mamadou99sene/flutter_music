@@ -3,6 +3,7 @@ class Music {
   late String preview;
   late String name_artist;
   late String artist_picture;
+  late int totalByArtist;
 
   Music.fromJson(dynamic jsonData) {
     title = jsonData["title"];

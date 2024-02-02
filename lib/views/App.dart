@@ -1,14 +1,17 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:http/http.dart' as http;
 import 'package:music/Models/Music.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:music/Providers/MusicProvider.dart';
+import 'package:music/views/Details.dart';
 import 'package:provider/provider.dart';
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
   @override
   TextEditingController _controller = TextEditingController();
 
@@ -29,7 +32,7 @@ class App extends StatelessWidget {
             backgroundColor: Colors.cyan,
           ),
           body: FutureBuilder<List<Music>>(
-              future: getArtiste(recherche),
+              future: MusicProvider().getArtiste(recherche),
               builder: ((context, snapshot) {
                 if (snapshot.hasData) {
                   if (snapshot.data == "") {
@@ -41,49 +44,57 @@ class App extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: ListView.builder(
+                          child: ListView.separated(
+                              separatorBuilder: (context, index) {
+                                return Divider(
+                                  color: Colors.cyan,
+                                  thickness: 1.0,
+                                );
+                              },
                               itemCount:
                                   (listMusic == null ? 0 : listMusic.length),
                               itemBuilder: (context, index) {
                                 return GestureDetector(
-                                  onTap: () async {
-                                    final player = AudioPlayer();
-                                    await player.play(
-                                        UrlSource(listMusic![index].preview));
-                                    final provider = Provider.of<MusicProvider>(
+                                  onTap: () {
+                                    Navigator.push(
                                         context,
-                                        listen: false);
-                                    provider.changeIcon();
+                                        MaterialPageRoute(
+                                            builder: (context) => Details(
+                                                music: listMusic[index])));
                                   },
-                                  child: Consumer<MusicProvider>(
-                                    builder: (context, value, child) {
-                                      return ListTile(
-                                        leading: CircleAvatar(
-                                          radius: 50,
-                                          backgroundImage: NetworkImage(
-                                              listMusic![index].artist_picture),
+                                  child: ListTile(
+                                      leading: CircleAvatar(
+                                        radius: 50,
+                                        backgroundImage: NetworkImage(
+                                            listMusic![index].artist_picture),
+                                      ),
+                                      title: Text(listMusic[index].title),
+                                      subtitle:
+                                          Text(listMusic[index].name_artist),
+                                      trailing: CircleAvatar(
+                                        foregroundColor: Colors.white,
+                                        backgroundColor: Colors.cyan,
+                                        child: Text(
+                                          "${MusicProvider().getTotalMusicByArtist()[index]}",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500),
                                         ),
-                                        title: Text(listMusic[index].title),
-                                        subtitle:
-                                            Text(listMusic[index].name_artist),
-                                        trailing: value.icon,
-                                      );
-                                    },
-                                  ),
+                                      )),
                                 );
                               }),
                         )
                       ],
                     );
                   }
-                } else if (snapshot.hasError) {
-                  return Text("${snapshot.error}");
-                } else {
+                } else if (snapshot.connectionState ==
+                    ConnectionState.waiting) {
                   return SpinKitWave(
                     color: Colors.black,
                     size: 50.0,
                     type: SpinKitWaveType.center,
                   );
+                } else {
+                  return Container();
                 }
               })),
           floatingActionButton: FloatingActionButton(
@@ -110,8 +121,10 @@ class App extends StatelessWidget {
                                       backgroundColor: Colors.red)),
                               ElevatedButton(
                                 onPressed: () {
-                                  recherche = _controller.text;
-                                  Navigator.pop(context);
+                                  setState(() {
+                                    recherche = _controller.text;
+                                    Navigator.pop(context);
+                                  });
                                 },
                                 child: Text("Valid"),
                               )
@@ -123,16 +136,5 @@ class App extends StatelessWidget {
               },
               child: Icon(Icons.search)),
         ));
-  }
-
-  Future<List<Music>> getArtiste(String artistName) async {
-    String url = "http://api.deezer.com/search?q=" + artistName.trim();
-    var response = await http.get(Uri.parse(url));
-    var responseJson = jsonDecode(response.body);
-    List<Music> musics = [];
-    for (var music in responseJson["data"]) {
-      musics.add(Music.fromJson(music));
-    }
-    return musics;
   }
 }
