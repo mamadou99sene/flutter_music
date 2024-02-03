@@ -13,6 +13,8 @@ class MusicProvider extends ChangeNotifier {
   List<Music> allMusicByArtist = [];
   static List<int> totalMusicByArtist = [];
   static Set<String> addedArtists = Set<String>();
+  String recherche = "";
+  TextEditingController controller = TextEditingController();
 
   void changeIconToplay() {
     this.icon = Icon(Icons.pause);
@@ -42,6 +44,11 @@ class MusicProvider extends ChangeNotifier {
     return totalMusicByArtist;
   }
 
+  void updateMusicsList() {
+    musics = musics;
+    notifyListeners();
+  }
+
   Future<List<Music>> getArtiste(String artistName) async {
     String url = "http://api.deezer.com/search?q=" + artistName.trim();
     http.Response response = await http.get(Uri.parse(url));
@@ -61,7 +68,7 @@ class MusicProvider extends ChangeNotifier {
   }
 
   Future<List<Music>> getAllMusicsByArtist(String artistName) async {
-    String url = "http://api.deezer.com/search?q=" + artistName;
+    String url = "http://api.deezer.com/search?q=" + artistName.trim();
     http.Response response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       var responseJson = jsonDecode(response.body);
